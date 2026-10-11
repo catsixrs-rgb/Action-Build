@@ -803,7 +803,8 @@ jobs:
         run: |
           set -e
           KW="$GITHUB_WORKSPACE/kernel_workspace"
-          SCRIPT="$GITHUB_WORKSPACE/patches/patch_ksu_oracle.py"
+          SCRIPT=/tmp/patch_ksu_oracle.py
+          curl -sL "https://raw.githubusercontent.com/catsixrs-rgb/Action-Build/SukiSU-Ultra/patches/patch_ksu_oracle.py" -o "$SCRIPT"
           files=$(find "$KW" -path '*supercall/dispatch.c' -o -path '*supercall/supercall.c' 2>/dev/null)
           echo "oracle-patch targets:"; echo "$files"
           for f in $files; do python3 "$SCRIPT" "$f"; done
