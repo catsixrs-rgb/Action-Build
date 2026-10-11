@@ -799,6 +799,21 @@ jobs:
           source $REJ_CHECKER
           check_rejects .
 
+      - name: Gate KSU detection oracle (anti-detect)
+        run: |
+          set -e
+          KW="$GITHUB_WORKSPACE/kernel_workspace"
+          SCRIPT="$GITHUB_WORKSPACE/patches/patch_ksu_oracle.py"
+          files=$(find "$KW" -path '*supercall/dispatch.c' -o -path '*supercall/supercall.c' 2>/dev/null)
+          echo "oracle-patch targets:"; echo "$files"
+          for f in $files; do python3 "$SCRIPT" "$f"; done
+          D=$(find "$KW" -path '*supercall/dispatch.c' 2>/dev/null | head -1)
+          if [ -n "$D" ] && grep -q 'is_manager() && current_uid().val != 0' "$D"; then
+            echo "✅ oracle gate verified in dispatch.c"
+          else
+            echo "❌ oracle gate NOT applied"; exit 1
+          fi
+
       - name: Revert and Postfix Fake Patches
         if: ${{ github.event.inputs.SUSFS_META != '-1' }}
         run: |
