@@ -821,6 +821,22 @@ jobs:
             echo "❌ sucompat su-gate NOT applied"; exit 1
           fi
 
+      - name: Mirror SUSFS uname spoof into init_uts_ns (anti-Tampered-kernel)
+        run: |
+          set -e
+          KW="$GITHUB_WORKSPACE/kernel_workspace"
+          SCRIPT=/tmp/patch_uts_spoof.py
+          curl -sL "https://raw.githubusercontent.com/catsixrs-rgb/Action-Build/SukiSU-Ultra/patches/patch_uts_spoof.py" -o "$SCRIPT"
+          files=$(find "$KW" -path '*fs/susfs.c' 2>/dev/null)
+          echo "uts-spoof targets:"; echo "$files"
+          for f in $files; do python3 "$SCRIPT" "$f"; done
+          F=$(find "$KW" -path '*fs/susfs.c' 2>/dev/null | head -1)
+          if [ -n "$F" ] && grep -q 'init_uts_ns.name.release, my_uname.release' "$F"; then
+            echo "✅ uts_spoof mirror verified in susfs.c"
+          else
+            echo "❌ uts_spoof mirror NOT applied"; exit 1
+          fi
+
       - name: Revert and Postfix Fake Patches
         if: ${{ github.event.inputs.SUSFS_META != '-1' }}
         run: |
